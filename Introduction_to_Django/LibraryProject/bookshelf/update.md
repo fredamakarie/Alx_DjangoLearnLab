@@ -6,7 +6,7 @@ x.title
 <!-- Results. -->
 '1984'
 
-Book.title = 'Nineteen Eighty-Four'
+book.title = 'Nineteen Eighty-Four'
 
 x.title = 'Nineteen Eighty-Four'
 x.save()
