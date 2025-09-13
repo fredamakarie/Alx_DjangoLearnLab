@@ -1,6 +1,8 @@
 from django.shortcuts import render
-from .models import Book,Library
+from .models import Book
+from .models import Library
 from django.views.generic import DetailView
+
 
 # Create your views here.
 
@@ -33,3 +35,10 @@ class SignUpView(CreateView):
     success_url = reverse_lazy('login')
     template_name = 'template/relationship_app/register.html'
 
+from django.contrib.auth.views import LoginView, LogoutView
+from django.urls import path
+
+urlpatterns = [
+    path('login/', LoginView.as_view(template_name='registration/login.html'), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
+]
