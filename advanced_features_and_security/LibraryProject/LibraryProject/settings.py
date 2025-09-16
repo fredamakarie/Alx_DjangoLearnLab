@@ -23,20 +23,40 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-3tjuo1#m5a39ce_%n6g2u%m(_+zqoku+&k!@4q+@8mozm@-@g('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
 
+# settings.py
+import os
+
+DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
+
+# Security settings
+if DEBUG:
+    # Development (local)
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+else:
+    # Production (with HTTPS)
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = "DENY"
+
+CONTENT_SECURITY_POLICY = {
+        'DIRECTIVES': {
+            'default-src': ("'self'",),
+            'font-src': ("'self'", 'fonts.gstatic.com'),
+            'script-src': ("'self'", 'cdn.jsdelivr.net'),
+            'style-src': ("'self'", 'fonts.googleapis.com'),
+        }
+    }
+  
 ALLOWED_HOSTS = ["127.0.0.1","localhost"]
-
-
-# Security Headers
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = "DENY"  # Prevent clickjacking
-
-# Enforce HTTPS
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True  # Redirect all HTTP to HTTPS (requires HTTPS setup)
 
 
 # Application definition
@@ -49,7 +69,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'bookshelf',
-    'relationship_app'
+    'relationship_app',
+    'csp',
 ]
 
 MIDDLEWARE = [
@@ -60,7 +81,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'csp.middleware.CSPMiddleware'
 ]
+
 
 ROOT_URLCONF = 'LibraryProject.urls'
 
@@ -135,4 +158,5 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # settings.py
-AUTH_USER_MODEL = "relationship_app.CustomUser"
+AUTH_USER_MODEL = "bookshelf.CustomUser"
+
