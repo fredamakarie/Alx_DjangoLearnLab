@@ -2,9 +2,16 @@ from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import permission_required
 from .models import Book
 
+def book_list(request):
+      """Retrieves all books and renders a template displaying the list."""
+      books = Book.objects.all()  # Fetch all book instances from the database
+      context = {'book_list': books}  # Create a context dictionary with book list
+      return render(request, 'bookshelf/book_list.html', context)
+
+
 # View books
 @permission_required('bookshelf.can_view', raise_exception=True)
-def list_books(request):
+def book_list(request):
     books = Book.objects.all()
     return render(request, 'books/list.html', {'books': books})
 
