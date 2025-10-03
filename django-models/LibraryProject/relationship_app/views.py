@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from .models import Book
 from .models import Library
-from django.views.generic.detail import DetailView
+ 
 
 
 
