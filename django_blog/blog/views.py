@@ -5,7 +5,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from .models import Post, Comment
-from .forms import PostForm
+from .forms import PostForm, CommentForm
 from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse_lazy, path
 from django.views.generic import CreateView
@@ -15,6 +15,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 
 # Create your views here.
 
+#POSTS
 #post list
 class PostListView(ListView):
     model = Post
@@ -35,7 +36,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.author = self.request.user
         return super().form_valid(form)
-
+    
 #post edit
 class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
@@ -59,6 +60,44 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         post = self.get_object()
         return self.request.user == post.author
+
+
+#COMMENTS
+#comment creation
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/comment_form.html'
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+
+#comment edit   
+class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/comment_form.html'
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+    def test_func(self):
+        post = self.get_object()
+        return self.request.user == post.author
+
+
+#comment deletion
+class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Comment
+    template_name = 'blog/comment_delete.html'
+    success_url = reverse_lazy('post-list')
+
+    def test_func(self):
+        post = self.get_object()
+        return self.request.user == post.author
     
 
 @permission_required('blog.can_add_comment', raise_exception=True)
@@ -74,7 +113,7 @@ def create_comment(request):
 
 
 
-
+#sign up, login and logout
 class SignUpView(CreateView):
     form_class = UserCreationForm
     success_url = reverse_lazy('login')
