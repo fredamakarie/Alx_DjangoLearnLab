@@ -4,8 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from .models import Post, Comment
-from .forms import PostForm, CommentForm
+from .models import Post, Comment, UserProfile
+from .forms import PostForm, CommentForm, ProfileUpdateForm
 from django.contrib.auth.forms import UserCreationForm
 from django.urls import reverse_lazy, path
 from django.views.generic import CreateView
@@ -188,11 +188,16 @@ def my_logout_view(request):
 
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
-    model = User
-    form_class = ProfileForm
+    model = UserProfile
+    form_class = ProfileUpdateForm
     template_name = 'blog/profile_edit.html'
     success_url = reverse_lazy('post-list')
 
     def get_object(self):
-        # only allow editing the logged-in user's profile
-        return self.request.user
+        # Return the profile of the logged-in user
+        return self.request.user.profile
+
+    def form_valid(self, form):
+        # ✅ This is the “save feature”
+        form.save()
+        return super().form_valid(form)
