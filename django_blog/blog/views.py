@@ -32,6 +32,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     form_class = PostForm
     template_name = 'blog/post_form.html'
+    permission_required = 'blog.add_post'
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -42,6 +43,7 @@ class PostUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Post
     form_class = PostForm
     template_name = 'blog/post_form.html'
+    permission_required = 'blog.change_post'
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -56,6 +58,7 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Post
     template_name = 'blog/post_confirm_delete.html'
     success_url = reverse_lazy('post-list')
+    permission_required = 'blog.delete_post'
 
     def test_func(self):
         post = self.get_object()
@@ -68,6 +71,7 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
     model = Comment
     form_class = CommentForm
     template_name = 'blog/comment_form.html'
+    permission_required = 'blog.add_comment'
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -79,6 +83,7 @@ class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Comment
     form_class = CommentForm
     template_name = 'blog/comment_form.html'
+    permission_required = 'blog.change_comment'
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -94,13 +99,47 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Comment
     template_name = 'blog/comment_delete.html'
     success_url = reverse_lazy('post-list')
+    permission_required = 'blog.delete_comment'
 
     def test_func(self):
         post = self.get_object()
         return self.request.user == post.author
     
 
-@permission_required('blog.can_add_comment', raise_exception=True)
+from django.db.models import Q
+
+class SearchResultsView(ListView):
+    model = Post
+    template_name = 'blog/search_results.html'
+    context_object_name = 'posts'
+
+    def get_queryset(self):
+        query = self.request.GET.get('q')
+        if query:
+            return Post.objects.filter(
+                Q(title__icontains=query) |
+                Q(content__icontains=query) |
+                Q(tags__name__icontains=query)
+            ).distinct()
+        return Post.objects.none()
+
+class TagListView(ListView):
+    model = Post
+    template_name = 'blog/tagged_posts.html'
+    context_object_name = 'posts'
+
+    def get_queryset(self):
+        tag_name = self.kwargs.get('tag_name')
+        return Post.objects.filter(tags__name__iexact=tag_name)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tag_name'] = self.kwargs.get('tag_name')
+        return context
+
+
+
+@permission_required('blog.add_comment', raise_exception=True)
 def create_comment(request):
     if request.method == "POST":
         content = request.POST.get("post")

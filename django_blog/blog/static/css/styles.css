@@ -1,0 +1,88 @@
+/* blog/static/blog/css/styles.css */
+
+/* General Page Styles */
+body {
+  font-family: "Poppins", sans-serif;
+  background-color: #f9fafb;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+header {
+  background-color: #1e40af;
+  color: white;
+  padding: 15px 30px;
+  text-align: center;
+}
+
+header a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.container {
+  max-width: 800px;
+  margin: 30px auto;
+  background: white;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Post Styles */
+.post {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 15px;
+  margin-bottom: 15px;
+}
+
+.post h2 {
+  margin-top: 0;
+}
+
+.post h2 a {
+  text-decoration: none;
+  color: #1e3a8a;
+}
+
+.post h2 a:hover {
+  text-decoration: underline;
+}
+
+/* Tags */
+.tags {
+  margin-top: 10px;
+}
+
+.tag {
+  display: inline-block;
+  background: #e0e7ff;
+  color: #1e3a8a;
+  padding: 3px 8px;
+  border-radius: 5px;
+  margin-right: 5px;
+  font-size: 0.9em;
+  text-decoration: none;
+}
+
+.tag:hover {
+  background: #c7d2fe;
+}
+
+/* Buttons */
+button, .btn {
+  display: inline-block;
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+button:hover, .btn:hover {
+  background-color: #1e3a8a;
+}
