@@ -1,16 +1,29 @@
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from .models import Book
+from rest_framework import filters, generics
+from django_filters.rest_framework import DjangoFilterBackend
+from .serializers import BookSerializer
 
 
-# 🔹 ListView — shows all books
-class BookListView(ListView):
-    model = Book
-    template_name = 'books/book_list.html'   # customize template
-    context_object_name = 'books'            # context name in template
-    ordering = ['title']                     # optional ordering
 
+class BookListView(generics.ListAPIView):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+
+    # ✅ enable filtering, searching, and ordering
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+
+    # ✅ specify fields you want to filter by (exact matches)
+    filterset_fields = ['author', 'publication_year']
+
+    # ✅ specify fields you want to search in (partial matches)
+    search_fields = ['title', 'author__name']
+
+    # ✅ specify fields you want to order by
+    ordering_fields = ['publication_year', 'title']
+    ordering = ['title']  # default ordering
 
 # 🔹 DetailView — show one book by ID
 class BookDetailView(DetailView):
