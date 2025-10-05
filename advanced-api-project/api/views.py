@@ -2,7 +2,7 @@ from django.views.generic import DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from .models import Book
-from rest_framework import filters, generics
+from rest_framework import generics, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from .serializers import BookSerializer
 
