@@ -1,5 +1,6 @@
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from taggit.models import Tag
 from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -201,3 +202,22 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
         # ✅ This is the “save feature”
         form.save()
         return super().form_valid(form)
+    
+    #tags
+class PostByTagListView(ListView):
+    model = Post
+    template_name = 'blog/post_list_by_tag.html'
+    context_object_name = 'posts'
+
+    def get_queryset(self):
+        # Get the tag slug from the URL
+        tag_slug = self.kwargs.get('tag_slug')
+        self.tag = get_object_or_404(Tag, slug=tag_slug)
+        # Return all posts that contain this tag
+        return Post.objects.filter(tags__in=[self.tag])
+
+    def get_context_data(self, **kwargs):
+        # Add the tag to the context so we can display it in the template
+        context = super().get_context_data(**kwargs)
+        context['tag'] = self.tag
+        return context
