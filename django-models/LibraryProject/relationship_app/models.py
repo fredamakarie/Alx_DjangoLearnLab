@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+
 # Create your models here.
 class Author(models.Model):
     name = models.CharField(max_length=200)
@@ -62,3 +63,63 @@ def save_user_profile(sender, instance, **kwargs):
 
 
 
+# relationship_app/views.py
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required, user_passes_test
+from .models import Book, Library, Author
+
+# ---------------------------------------
+# Helper functions for role checking
+# ---------------------------------------
+def is_admin(user):
+    return hasattr(user, 'userprofile') and user.userprofile.role == 'ADMIN'
+
+def is_librarian(user):
+    return hasattr(user, 'userprofile') and user.userprofile.role == 'LIBRARIAN'
+
+def is_member(user):
+    return hasattr(user, 'userprofile') and user.userprofile.role == 'MEMBER'
+
+
+# ---------------------------------------
+# Admin View
+# ---------------------------------------
+@login_required
+@user_passes_test(is_admin)
+def admin_dashboard(request):
+    """Admin can manage all users, libraries, and books."""
+    context = {
+        'authors': Author.objects.all(),
+        'books': Book.objects.all(),
+        'libraries': Library.objects.all(),
+    }
+    return render(request, 'relationship_app/admin_dashboard.html', context)
+
+
+# ---------------------------------------
+# Librarian View
+# ---------------------------------------
+@login_required
+@user_passes_test(is_librarian)
+def librarian_dashboard(request):
+    """Librarian can view and manage books in their library."""
+    library = Library.objects.filter(librarian=request.user).first()
+    context = {
+        'library': library,
+        'books': library.books.all() if library else [],
+    }
+    return render(request, 'relationship_app/librarian_dashboard.html', context)
+
+
+# ---------------------------------------
+# Member (User) View
+# ---------------------------------------
+@login_required
+@user_passes_test(is_member)
+def member_dashboard(request):
+    """Member can view all available books and authors."""
+    context = {
+        'books': Book.objects.all(),
+        'authors': Author.objects.all(),
+    }
+    return render(request, 'relationship_app/member_dashboard.html', context)

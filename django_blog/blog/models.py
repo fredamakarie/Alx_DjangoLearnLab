@@ -6,8 +6,8 @@ from django.urls import reverse
 from taggit.managers import TaggableManager
 
 
-# Create your models here.
 class Post (models.Model):
+# Create your models here.
     title = models.CharField(max_length=200)
     content= models.TextField()
     published_date = models.DateTimeField(auto_now_add=True)

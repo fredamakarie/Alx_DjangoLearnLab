@@ -1,11 +1,57 @@
 from .models import Librarian, Library, Book
 
+# relationship_app/query_samples.py
+import django
+import os
 
-# Query all books by a specific author.
-author_books= Book.objects.filter(author='Jane Austen')
+# ✅ Set up Django environment
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'LibraryProject.settings')
+django.setup()
 
-# List all books in a library.
-books= Library.objects.all()
+from relationship_app.models import Author, Book, Library
 
-# Retrieve the librarian for a library
-librarian_name= Librarian.objects.all()
+# ------------------------------------------------------------------
+# 1️⃣ Query all books by a specific author
+# ------------------------------------------------------------------
+def get_books_by_author(author_name):
+    try:
+        author = Author.objects.get(name=author_name)
+        books = author.books.all()
+        print(f"Books by {author.name}:")
+        for book in books:
+            print(f" - {book.title}")
+    except Author.DoesNotExist:
+        print(f"No author found with name '{author_name}'")
+
+# ------------------------------------------------------------------
+# 2️⃣ List all books in a library
+# ------------------------------------------------------------------
+def list_books_in_library(library_name):
+    try:
+        library = Library.objects.get(name=library_name)
+        books = library.books.all()
+        print(f"Books in library '{library.name}':")
+        for book in books:
+            print(f" - {book.title}")
+    except Library.DoesNotExist:
+        print(f"No library found with name '{library_name}'")
+
+# ------------------------------------------------------------------
+# 3️⃣ Retrieve the librarian for a library
+# ------------------------------------------------------------------
+def get_librarian_for_library(library_name):
+    try:
+        library = Library.objects.get(name=library_name)
+        librarian = library.librarian
+        print(f"Librarian for '{library.name}': {librarian.username}")
+    except Library.DoesNotExist:
+        print(f"No library found with name '{library_name}'")
+
+# ------------------------------------------------------------------
+# Run sample queries
+# ------------------------------------------------------------------
+if __name__ == "__main__":
+    # Change these to match your data
+    get_books_by_author("J.K. Rowling")
+    list_books_in_library("Central Library")
+    get_librarian_for_library("Central Library")
