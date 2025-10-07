@@ -1,10 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Book
-from .models import Library
-from django.views.generic import CreateView
+from .models import Book, Library, UserProfile, User
 from django.views.generic.detail import DetailView
-from django.contrib.auth.forms import UserCreationForm
-from django.urls import reverse_lazy
+from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.views import LoginView, LogoutView
 from django.urls import path
@@ -42,11 +39,41 @@ class LibraryDetail(DetailView):
 
 #signup, login and logout
 
-class SignUpView(CreateView):
-    form_class = UserCreationForm
-    success_url = reverse_lazy('login')
-    template_name = 'template/relationship_app/register.html'
+def register(request):
+    """
+    Function-based view for user registration.
+    Creates a new User and associated UserProfile (with role).
+    """
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        role = request.POST.get('role', 'MEMBER')  # default role is MEMBER
 
+        # ✅ Basic validation
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+            return redirect('register')
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists.")
+            return redirect('register')
+
+        # ✅ Create the user
+        user = User.objects.create_user(username=username, email=email, password=password)
+
+        # ✅ Create the user profile with role
+        UserProfile.objects.create(user=user, role=role)
+
+        # ✅ Automatically log the user in (optional)
+        login(request, user)
+
+        messages.success(request, f"Account created successfully for {username}!")
+        return redirect('home')  # change to your home or dashboard URL
+
+    # If GET request — render registration form
+    return render(request, 'relationship_app/register.html')
 
 
 urlpatterns = [
@@ -67,7 +94,7 @@ def my_login_view(request):
             return redirect("member")
         else:
             return render(request, "login.html", {"error": "Invalid credentials"})
-    return render(request, "login.html")
+    return render(request, "member.html")
 
 
 
