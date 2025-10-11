@@ -1,36 +1,85 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm
-from django.urls import reverse_lazy
-from django.views.generic import CreateView
-from django.contrib.auth import authenticate, login, logout
-
-# Create your views here.
-
-class SignUpView(CreateView):
-    form_class = UserCreationForm
-    success_url = reverse_lazy('login')
-    template_name = 'template/relationship_app/register.html'
+from rest_framework import generics, permissions, status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+from django.contrib.auth import login, logout
+from django.shortcuts import get_object_or_404
+from .models import CustomUser
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
 
+# --- Registration ---
+class RegisterView(generics.CreateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = RegisterSerializer
+    permission_classes = [permissions.AllowAny]
 
-class LogInView():
-    def my_login_view(request):
-        if request.method == "POST":
-            username = request.POST["username"]
-            password = request.POST["password"]
-
-            user = authenticate(request, username=username, password=password)
-            if user is not None:
-                login(request, user)  # start session
-                return redirect("member")
-            else:
-                return render(request, "login.html", {"error": "Invalid credentials"})
-        return render(request, "login.html")
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            "user": UserSerializer(user, context=self.get_serializer_context()).data,
+            "token": token.key
+        }, status=status.HTTP_201_CREATED)
 
 
-class LogOutView():
-    def my_logout_view(request):
+# --- Login ---
+class LoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data
+        login(request, user)
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            "user": UserSerializer(user).data,
+            "token": token.key
+        })
+
+
+# --- Logout ---
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        # Delete the user’s token to log them out
+        request.user.auth_token.delete()
         logout(request)
-        return redirect("login")
-    
+        return Response({"message": "Successfully logged out."}, status=status.HTTP_200_OK)
 
+
+# --- Profile ---
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+
+# --- Follow another user ---
+class FollowUserView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, user_id):
+        user_to_follow = get_object_or_404(CustomUser, id=user_id)
+        if user_to_follow == request.user:
+            return Response({"error": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
+        request.user.followers.add(user_to_follow)
+        return Response({"message": f"You are now following {user_to_follow.username}."}, status=status.HTTP_200_OK)
+
+
+# --- Unfollow another user ---
+class UnfollowUserView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, user_id):
+        user_to_unfollow = get_object_or_404(CustomUser, id=user_id)
+        if user_to_unfollow == request.user:
+            return Response({"error": "You cannot unfollow yourself."}, status=status.HTTP_400_BAD_REQUEST)
+        request.user.followers.remove(user_to_unfollow)
+        return Response({"message": f"You unfollowed {user_to_unfollow.username}."}, status=status.HTTP_200_OK)
