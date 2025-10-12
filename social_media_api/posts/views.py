@@ -105,3 +105,38 @@ def unlike_post(request, pk):
 
     like.delete()
     return Response({"detail": "Post unliked."}, status=status.HTTP_200_OK)
+
+
+from rest_framework import generics, permissions, filters
+from rest_framework.pagination import PageNumberPagination
+from django.shortcuts import get_object_or_404
+from .models import Post
+from .serializers import PostSerializer
+
+# Custom pagination
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 5
+    page_size_query_param = 'page_size'
+    max_page_size = 50
+
+
+class FollowedPostsView(generics.ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'content']
+    ordering_fields = ['created_at']
+
+    def get_queryset(self):
+        user = self.request.user
+
+        # Get all users this user follows
+        following_users = user.following.all()  # from the followers M2M on CustomUser
+
+        # Return posts by followed users and self
+        queryset = Post.objects.filter(
+            author__in=list(following_users) + [user]
+        ).order_by('-created_at')
+
+        return queryset

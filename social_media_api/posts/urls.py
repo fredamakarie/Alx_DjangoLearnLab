@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 from .views import (
-    PostListCreateView, PostDetailView, PostViewSet,
+    PostListCreateView, PostDetailView, PostViewSet, FollowedPostsView,
     CommentListCreateView, CommentDetailView, like_post, unlike_post
 )
 
@@ -20,5 +20,6 @@ urlpatterns = [
      # Likes
     path('<int:pk>/like/', like_post, name='like-post'),
     path('<int:pk>/unlike/', unlike_post, name='unlike-post'),
+    path('feed/', FollowedPostsView.as_view(), name='followed-posts'),
 
 ]
