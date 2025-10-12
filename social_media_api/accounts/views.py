@@ -7,10 +7,10 @@ from django.shortcuts import get_object_or_404
 from .models import CustomUser
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
-User = get_user_model()
+
 # --- Registration ---
 class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
+    queryset = get_user_model().objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
