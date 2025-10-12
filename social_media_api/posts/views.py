@@ -1,6 +1,3 @@
-from rest_framework import generics, permissions
-from rest_framework.response import Response
-from rest_framework import status
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 from rest_framework.decorators import api_view, permission_classes
@@ -11,8 +8,8 @@ from django.shortcuts import get_object_or_404
 from .models import Post, Like
 from notifications.models import Notification
 from django.contrib.contenttypes.models import ContentType
-from .models import Post, Comment
-from .serializers import PostSerializer, CommentSerialize
+
+
 
 # --- POST VIEWS ---
 
@@ -30,7 +27,12 @@ class PostListCreateView(generics.ListCreateAPIView):
         serializer.save(author=self.request.user)
 
 
-class PostDetailView(viewsets.Modelviewset):
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -71,7 +73,7 @@ class CommentDetailView(generics.RetrieveUpdateDestroyAPIView):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def like_post(request, pk):
-    post = get_object_or_404(Post, pk=pk)
+    post = generics.get_object_or_404(Post, pk=pk)
     user = request.user
 
     if Like.objects.filter(user=user, post=post).exists():
