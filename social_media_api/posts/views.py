@@ -136,7 +136,7 @@ class FollowedPostsView(generics.ListAPIView):
 
         # Return posts by followed users and self
         queryset = Post.objects.filter(
-            author__in=list(following_users) + [user]
+            author__in=following_users
         ).order_by('-created_at')
 
         return queryset
