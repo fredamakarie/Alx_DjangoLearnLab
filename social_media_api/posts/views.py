@@ -6,7 +6,7 @@ from .serializers import PostSerializer, CommentSerializer
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status, generics, permissions, filters
+from rest_framework import status, generics, permissions, filters, viewsets
 from django.shortcuts import get_object_or_404
 from .models import Post, Like
 from notifications.models import Notification
@@ -30,7 +30,7 @@ class PostListCreateView(generics.ListCreateAPIView):
         serializer.save(author=self.request.user)
 
 
-class PostDetailView(generics.RetrieveUpdateDestroyAPIView):
+class PostDetailView(viewsets.Modelviewset):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
@@ -77,7 +77,7 @@ def like_post(request, pk):
     if Like.objects.filter(user=user, post=post).exists():
         return Response({"detail": "You have already liked this post."}, status=status.HTTP_400_BAD_REQUEST)
 
-    Like.objects.create(user=user, post=post)
+    Like.objects.create(user=request.user, post=post)
 
     # Create notification for post author
     if post.author != user:

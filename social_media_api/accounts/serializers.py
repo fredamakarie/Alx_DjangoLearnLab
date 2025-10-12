@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from .models import CustomUser
+from rest_framework.authtoken.models import Token
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,25 +11,41 @@ class UserSerializer(serializers.ModelSerializer):
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+    token = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = CustomUser
-        fields = ['username', 'email', 'password']
+        fields = ['id', 'username', 'email', 'password', 'bio', 'profile_picture', 'token']
+
+    def get_token(self, obj):
+        token, created = Token.objects.get_or_create(user=obj)
+        return token.key
 
     def create(self, validated_data):
-        user = CustomUser.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data.get('email'),
-            password=validated_data['password']
-        )
-        return user
+        password = validated_data.pop('password')
+        user = CustomUser(**validated_data)
+        user.set_password(password)
+        user.save()
 
+        # Create token for new user
+        Token.objects.get_or_create(user=user)
+
+        return user
+    
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
+    token = serializers.CharField(read_only=True)
 
     def validate(self, data):
-        user = authenticate(**data)
-        if user and user.is_active:
-            return user
-        raise serializers.ValidationError("Invalid credentials")
+        username = data.get('username')
+        password = data.get('password')
+
+        user = authenticate(username=username, password=password)
+        if not user:
+            raise serializers.ValidationError("Invalid username or password")
+
+        token, created = Token.objects.get_or_create(user=user)
+        data['token'] = token.key
+        data['user_id'] = user.id
+        return data
