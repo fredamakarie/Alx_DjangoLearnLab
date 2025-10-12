@@ -32,7 +32,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
 
         # Create token for the user after saving
-        Token.objects.get_or_create(user=user)
+        Token.objects.create(user=user)
         return user
     
 class LoginSerializer(serializers.Serializer):
@@ -50,7 +50,7 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid username or password")
 
         token, created = Token.objects.get_or_create(user=user)
-        
+
         return {
             'user_id': user.id,
             'username': user.username,
